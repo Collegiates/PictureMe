@@ -1,8 +1,6 @@
-"""FastAPI application setup, middleware, error handlers, route mounting, and local entrypoint."""
-
-import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from mangum import Mangum
 
 from backend.config import getSettings
 from backend.errors import register_error_handlers
@@ -21,8 +19,7 @@ app = FastAPI(
     redoc_url="/api/redoc" if settings.is_development else None,
 )
 
-# --- Middleware -----------------------------------------------------------
-
+# Middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.frontend_origin, settings.app_origin],
@@ -30,29 +27,26 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 app.middleware("http")(log_requests)
 
-# --- Error handlers -------------------------------------------------------
-
+# Errors
 register_error_handlers(app)
 
-# --- Routes ---------------------------------------------------------------
-
+# Routes
 app.include_router(health_router)
 app.include_router(config_router)
 app.include_router(verification_router)
 
+# ✅ Vercel uses THIS
+handler = Mangum(app)
 
-# --- Local entrypoint -----------------------------------------------------
-
-def _run() -> None:
+# ✅ Local dev uses THIS
+if __name__ == "__main__":
+    import uvicorn
     uvicorn.run(
         "backend.main:app",
         host="0.0.0.0",
         port=settings.port,
         reload=settings.is_development,
     )
-
-
-if __name__ == "__main__":
-    _run()
