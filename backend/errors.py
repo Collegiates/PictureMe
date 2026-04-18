@@ -1,6 +1,7 @@
 """Stable API error shape and global exception handlers."""
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 
@@ -33,6 +34,15 @@ def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(404)
     async def not_found_handler(_request: Request, _exc: Exception) -> JSONResponse:
         return error_response("Not found", "NOT_FOUND", 404)
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_error_handler(_request: Request, exc: RequestValidationError) -> JSONResponse:
+        return error_response(
+            "Validation failed",
+            "VALIDATION_ERROR",
+            422,
+            {"errors": exc.errors()},
+        )
 
     @app.exception_handler(Exception)
     async def generic_error_handler(_request: Request, _exc: Exception) -> JSONResponse:

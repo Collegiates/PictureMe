@@ -19,5 +19,8 @@ async def require_internal_secret(
     """
     settings = getSettings()
 
-    if credentials is None or credentials.credentials != settings.internal_api_secret:
+    if credentials is None:
+        raise AppError("Missing authorization header", code="FORBIDDEN", status=403)
+
+    if credentials.credentials != settings.internal_api_secret_value:
         raise AppError("Forbidden", code="FORBIDDEN", status=403)

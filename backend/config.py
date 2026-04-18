@@ -1,7 +1,9 @@
 """Environment validation and typed settings access."""
 
 from functools import lru_cache
+from typing import Any, Literal
 
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,17 +18,17 @@ class Settings(BaseSettings):
 
     # App
     port: int = 8000
-    node_env: str = "development"
+    node_env: Literal["development", "test", "production"] = "development"
     app_origin: str = "http://localhost:3000"
     frontend_origin: str = "http://localhost:5173"
-    log_level: str = "info"
+    log_level: Literal["debug", "info", "warning", "error", "critical"] = "info"
 
     # Supabase
-    supabase_url: str = ""
-    supabase_service_role_key: str = ""
+    supabase_url: str = Field(min_length=1)
+    supabase_service_role_key: SecretStr
 
     # Internal
-    internal_api_secret: str = "replace-me"
+    internal_api_secret: SecretStr
 
     # OAuth
     google_oauth_enabled: bool = True
@@ -36,13 +38,23 @@ class Settings(BaseSettings):
         return self.node_env == "development"
 
     @property
-    def public_config(self) -> dict:
+    def public_config(self) -> dict[str, Any]:
         """Browser-safe config values that can be exposed to the frontend."""
         return {
             "appOrigin": self.app_origin,
             "frontendOrigin": self.frontend_origin,
             "googleOAuthEnabled": self.google_oauth_enabled,
         }
+
+    @property
+    def supabase_service_role_key_value(self) -> str:
+        """Return the raw Supabase service role key for backend-only use."""
+        return self.supabase_service_role_key.get_secret_value()
+
+    @property
+    def internal_api_secret_value(self) -> str:
+        """Return the raw internal API secret for backend-only use."""
+        return self.internal_api_secret.get_secret_value()
 
 
 @lru_cache
