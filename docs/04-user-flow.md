@@ -38,7 +38,7 @@ When an admin uploads new photos, the gallery updates live:
 - Individual photo: download button on full-size view
 - All my photos: **Download All** button in My Photos tab (downloads a zip via Cloudinary)
 - Shareable gallery link: users can copy a public token URL for their My Photos view — useful for sharing with family who aren't on PictureMe
-
+- This Shareable link that would take the family member to a seperate page with just access to the photos of that family member and the user would not need to log in or sign up to access this page.
 **APIs:** Cloudinary download URL with `fl_attachment`, Supabase `gallery_tokens` table
 
 ---
