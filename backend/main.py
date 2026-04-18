@@ -1,6 +1,8 @@
+"""FastAPI application setup, middleware, error handlers, route mounting, and local entrypoint."""
+
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from mangum import Mangum
 
 from backend.config import getSettings
 from backend.errors import registerErrorHandlers
