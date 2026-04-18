@@ -1,5 +1,4 @@
-# List of packages required for the project
-
-flask
-requests
-numpy
+fastapi==0.115.12
+pydantic-settings==2.8.1
+supabase==2.15.0
+uvicorn==0.34.0
