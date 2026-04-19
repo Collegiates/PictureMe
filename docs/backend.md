@@ -2,20 +2,28 @@
 
 ## Purpose
 
-The backend in [backend](/Users/tervin23/Documents/AG/PictureMe/backend) is a FastAPI service that will own API routing, Supabase JWT validation, protected runtime configuration boundaries, and the orchestration layer for event, gallery, upload, matching, and cleanup workflows.
+The backend in [backend](/Users/tervin23/Documents/AG/PictureMe/backend) remains a FastAPI service. It owns API routing, Supabase JWT validation, browser-safe runtime configuration, and the orchestration layer for account, event, gallery, upload, matching, and cleanup workflows.
 
-## Stage 1 Contents
+## Simplified Structure
 
-- [backend/app/main.py](/Users/tervin23/Documents/AG/PictureMe/backend/app/main.py): FastAPI application setup, middleware registration, and route mounting.
-- [backend/app/config.py](/Users/tervin23/Documents/AG/PictureMe/backend/app/config.py): Environment validation and typed settings access.
-- [backend/app/errors.py](/Users/tervin23/Documents/AG/PictureMe/backend/app/errors.py): Stable API error shape and global exception handlers.
-- [backend/app/dependencies/auth.py](/Users/tervin23/Documents/AG/PictureMe/backend/app/dependencies/auth.py): Supabase bearer-token validation dependency.
-- [backend/app/dependencies/internal.py](/Users/tervin23/Documents/AG/PictureMe/backend/app/dependencies/internal.py): Internal-only route protection.
-- [backend/app/routes](/Users/tervin23/Documents/AG/PictureMe/backend/app/routes): Health, runtime-config, and debug validation routes for Stage 1.
-- [backend/main.py](/Users/tervin23/Documents/AG/PictureMe/backend/main.py): Local FastAPI startup entrypoint.
+- [backend/app.py](/Users/tervin23/Documents/AG/PictureMe/backend/app.py): Single FastAPI application entrypoint for local runs and Vercel.
+- [backend/config.py](/Users/tervin23/Documents/AG/PictureMe/backend/config.py): Typed environment loading and browser-safe runtime config.
+- [backend/deps.py](/Users/tervin23/Documents/AG/PictureMe/backend/deps.py): Shared auth, internal-secret, and Supabase admin helpers.
+- [backend/errors.py](/Users/tervin23/Documents/AG/PictureMe/backend/errors.py): Stable API error contract and exception handlers.
+- [backend/schemas.py](/Users/tervin23/Documents/AG/PictureMe/backend/schemas.py): Shared Pydantic response models.
+- [backend/routers](/Users/tervin23/Documents/AG/PictureMe/backend/routers): Route groups split into `system.py` and `account.py`.
+- [backend/services](/Users/tervin23/Documents/AG/PictureMe/backend/services): Business logic grouped by feature, starting with `account.py`.
+- [api/app.py](/Users/tervin23/Documents/AG/PictureMe/api/app.py): Vercel Python function entrypoint.
 
-## Runtime Boundary
+## Routing Logic
 
-- Browser-safe config may be exposed through the runtime-config endpoint.
-- Secrets remain backend-only and must never be forwarded wholesale to the frontend.
-- Supabase remains the source of truth for auth and relational data.
+- `backend/app.py` creates the FastAPI app once and mounts route groups.
+- `backend/routers/system.py` contains health, runtime-config, and validation routes.
+- `backend/routers/account.py` contains Stage 2 account and face-profile routes.
+- Feature logic stays out of route files and moves into `backend/services/*`, which keeps future stages easier to extend.
+
+## Extensibility Notes
+
+- New backend stages can add one router file and one matching service file per domain area instead of creating new dependency or middleware layers.
+- Secrets remain backend-only.
+- The face-profile upload service already contains an explicit comment where AWS Rekognition API keys and indexing logic will be required later.

@@ -1,49 +1,69 @@
-"""Stable API error shape and global exception handlers."""
+"""Shared error handling for the FastAPI backend."""
+
+import logging
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+logger = logging.getLogger("pictureme-backend")
+
 
 class AppError(Exception):
-    """Application-level error with a stable JSON contract."""
+    """Application-level error with a stable JSON response shape."""
 
-    def __init__(self, message: str, code: str = "INTERNAL_ERROR", status: int = 500, details: dict | None = None):
+    def __init__(
+        self,
+        message: str,
+        code: str = "INTERNAL_ERROR",
+        status: int = 500,
+        details: dict[str, object] | None = None,
+    ) -> None:
         super().__init__(message)
-        self.message = message
         self.code = code
-        self.status = status
         self.details = details
+        self.message = message
+        self.status = status
 
 
-def error_response(message: str, code: str, status: int, details: dict | None = None) -> JSONResponse:
-    """Build a consistent error JSON response."""
-    body: dict = {"message": message, "code": code}
+def buildErrorResponse(
+    message: str,
+    code: str,
+    status: int,
+    details: dict[str, object] | None = None,
+) -> JSONResponse:
+    payload: dict[str, object] = {"message": message, "code": code}
     if details is not None:
-        body["details"] = details
-    return JSONResponse(status_code=status, content=body)
+        payload["details"] = details
+    return JSONResponse(status_code=status, content=payload)
 
 
-def register_error_handlers(app: FastAPI) -> None:
-    """Attach global exception handlers to the FastAPI app."""
-
+def registerErrorHandlers(app: FastAPI) -> None:
     @app.exception_handler(AppError)
-    async def app_error_handler(_request: Request, exc: AppError) -> JSONResponse:
-        return error_response(exc.message, exc.code, exc.status, exc.details)
-
-    @app.exception_handler(404)
-    async def not_found_handler(_request: Request, _exc: Exception) -> JSONResponse:
-        return error_response("Not found", "NOT_FOUND", 404)
+    async def appErrorHandler(_request: Request, exc: AppError) -> JSONResponse:
+        return buildErrorResponse(exc.message, exc.code, exc.status, exc.details)
 
     @app.exception_handler(RequestValidationError)
-    async def validation_error_handler(_request: Request, exc: RequestValidationError) -> JSONResponse:
-        return error_response(
-            "Validation failed",
+    async def validationErrorHandler(
+        _request: Request,
+        exc: RequestValidationError,
+    ) -> JSONResponse:
+        return buildErrorResponse(
+            "The request payload is invalid.",
             "VALIDATION_ERROR",
             422,
             {"errors": exc.errors()},
         )
 
+    @app.exception_handler(404)
+    async def notFoundHandler(_request: Request, _exc: Exception) -> JSONResponse:
+        return buildErrorResponse("Not found", "NOT_FOUND", 404)
+
     @app.exception_handler(Exception)
-    async def generic_error_handler(_request: Request, _exc: Exception) -> JSONResponse:
-        return error_response("Internal server error", "INTERNAL_ERROR", 500)
+    async def genericErrorHandler(_request: Request, exc: Exception) -> JSONResponse:
+        logger.exception("Unhandled backend error", exc_info=exc)
+        return buildErrorResponse(
+            "PictureMe could not complete the request.",
+            "INTERNAL_SERVER_ERROR",
+            500,
+        )

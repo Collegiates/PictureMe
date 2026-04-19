@@ -54,15 +54,15 @@ Build these only once Priority 1 is fully working end to end.
 
 ### Person 1 — Backend lead
 - Supabase schema + RLS policies
-- FastAPI routers and dependencies
+- FastAPI routers and shared dependencies
 - AWS Rekognition integration (`IndexFaces`, `SearchFacesByImage`, `CreateCollection`)
 - Cloudinary upload pipeline
 - Matching pipeline logic on join + on upload
-- Railway or Render deployment
+- Vercel Python Functions deployment
 
 ### Person 2 — Frontend lead
-- React app scaffold + Vite setup
-- React Router — all routes
+- Next.js app scaffold
+- Next.js App Router — all routes
 - Event gallery page with My Photos + All Photos tabs
 - Photo grid UI, full-size photo modal, download button
 - Supabase real-time subscriptions in the gallery
